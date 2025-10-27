@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Insta IQ - Select Practice Mode</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="styles.css" />
+        <style>
+            :root {
+                --primary-color: #4f46e5; /* Indigo 600 */
+            }
+            .text-primary {
+                color: var(--primary-color);
+            }
+            .bg-primary {
+                background-color: var(--primary-color);
+            }
+            .hover\:bg-primary-dark:hover {
+                background-color: #4338ca;
+            }
+            .start-btn {
+                background-color: var(--primary-color);
+            }
+            .start-btn:hover {
+                background-color: #4338ca;
+            }
+        </style>
+    </head>
+    <body class="bg-gray-50 min-h-screen">
+        <header class="bg-white shadow-md w-full fixed top-0 z-50">
+            <div
+                class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center"
+            >
+                <div class="flex items-center space-x-3">
+                    <div class="text-2xl font-bold text-primary">
+                        <a href="interview.html">Insta IQ</a>
+                    </div>
+                </div>
+                <nav class="space-x-4">
+                    <img
+                        src="logo.png"
+                        alt="Insta IQ Secondary Logo"
+                        class="h-12 w-auto"
+                    />
+                </nav>
+            </div>
+        </header>
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-20">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-2">
+                Choose Interview Mode
+            </h1>
+            <p class="text-xl text-gray-600 mb-10">
+                Select the format that suits your practice style.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div
+                    class="bg-white p-8 rounded-xl shadow-2xl border-t-8 border-primary flex flex-col justify-between mode-card"
+                    data-mode="virtual-video"
+                >
+                    <div>
+                        <div class="text-6xl mb-4">📹</div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-4">
+                            Video Interview
+                        </h3>
+                        <p class="text-gray-500 mb-6">
+                            Full simulation with camera, voice, and body
+                            language analysis.
+                        </p>
+
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-center">
+                                <span class="text-green-500 text-xl mr-2"
+                                    >✓</span
+                                >
+                                Real-time video feedback
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 text-xl mr-2"
+                                    >✓</span
+                                >
+                                Voice analysis
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 text-xl mr-2"
+                                    >✓</span
+                                >
+                                Full presence analysis
+                            </li>
+                        </ul>
+                    </div>
+                    <button
+                        class="start-btn mt-8 w-full py-3 text-white font-semibold rounded-lg transition duration-200"
+                    >
+                        Start Video Interview
+                    </button>
+                </div>
+
+                <div
+                    class="bg-white p-8 rounded-xl shadow-2xl border-t-8 border-yellow-500 flex flex-col justify-between mode-card"
+                    data-mode="virtual-voice"
+                >
+                    <div>
+                        <div class="text-6xl mb-4">🎤</div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-4">
+                            Voice-Only Interview
+                        </h3>
+                        <p class="text-gray-500 mb-6">
+                            Practice speaking without the camera, focusing on
+                            verbal skills.
+                        </p>
+
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-center">
+                                <span class="text-green-500 text-xl mr-2"
+                                    >✓</span
+                                >
+                                Voice recognition
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 text-xl mr-2"
+                                    >✓</span
+                                >
+                                Clarity and pace analysis
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 text-xl mr-2"
+                                    >✓</span
+                                >
+                                Low bandwidth option
+                            </li>
+                        </ul>
+                    </div>
+                    <button
+                        class="start-btn mt-8 w-full py-3 text-white font-semibold rounded-lg transition duration-200"
+                    >
+                        Start Voice Interview
+                    </button>
+                </div>
+
+                <div
+                    class="bg-white p-8 rounded-xl shadow-2xl border-t-8 border-gray-400 flex flex-col justify-between mode-card"
+                    data-mode="chat"
+                >
+                    <div>
+                        <div class="text-6xl mb-4">💬</div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-4">
+                            Chat Interview
+                        </h3>
+                        <p class="text-gray-500 mb-6">
+                            Practice with text-based conversation, ideal for
+                            written precision.
+                        </p>
+
+                        <ul class="space-y-3 text-gray-700">
+                            <li class="flex items-center">
+                                <span class="text-green-500 text-xl mr-2"
+                                    >✓</span
+                                >
+                                Text-based responses
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 text-xl mr-2"
+                                    >✓</span
+                                >
+                                Instant feedback
+                            </li>
+                            <li class="flex items-center">
+                                <span class="text-green-500 text-xl mr-2"
+                                    >✓</span
+                                >
+                                Communication analysis
+                            </li>
+                        </ul>
+                    </div>
+                    <button
+                        class="start-btn mt-8 w-full py-3 text-white font-semibold rounded-lg transition duration-200"
+                    >
+                        Start Chat Interview
+                    </button>
+                </div>
+            </div>
+        </main>
+        <script type="module" src="scripts/selection.js"></script>
+    </body>
+</html>

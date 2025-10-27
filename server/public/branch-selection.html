@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Insta IQ - Select Technical Branch</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="styles.css" />
+        <style>
+            /* Consistent theme styles */
+            :root {
+                --primary-color: #4f46e5; /* Indigo 600 */
+            }
+            .text-primary {
+                color: var(--primary-color);
+            }
+            .bg-primary {
+                background-color: var(--primary-color);
+            }
+            .hover\:bg-primary-dark:hover {
+                background-color: #4338ca;
+            }
+
+            /* Highlight for selected category */
+            .category-card.active {
+                border-bottom: 4px solid var(--primary-color);
+                box-shadow:
+                    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+                    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+                /* Ensure the shadow/border is visible */
+            }
+            /* Custom scrollbar for a cleaner look on sub-domains */
+            #subDomainButtons::-webkit-scrollbar {
+                height: 8px;
+            }
+            #subDomainButtons::-webkit-scrollbar-thumb {
+                background-color: #cbd5e1; /* Gray 300 */
+                border-radius: 4px;
+            }
+            #subDomainButtons::-webkit-scrollbar-track {
+                background-color: #f1f5f9; /* Gray 100 */
+            }
+        </style>
+    </head>
+    <body class="bg-gray-50 min-h-screen">
+        <header class="bg-white shadow-md w-full fixed top-0 z-50">
+            <div
+                class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center"
+            >
+                <div class="flex items-center space-x-3">
+                    <div class="text-2xl font-bold text-primary">
+                        <a href="interview.html">Insta IQ</a>
+                    </div>
+                </div>
+
+                <nav class="space-x-4">
+                    <img
+                        src="logo.png"
+                        alt="Insta IQ Secondary Logo"
+                        class="h-12 w-auto"
+                    />
+                </nav>
+            </div>
+        </header>
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-[120px]">
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-2">
+                Technical Interview: Select Your Domain
+            </h1>
+            <p class="text-xl text-gray-600 mb-10">
+                Choose the broad area you wish to be interviewed in.
+            </p>
+
+            <div
+                class="flex space-x-4 overflow-x-auto pb-4 md:grid md:grid-cols-3 lg:grid-cols-6 md:gap-4"
+            >
+                <a
+                    href="#"
+                    class="category-card flex-shrink-0 w-48 md:w-auto block bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition duration-300"
+                    data-category="Core"
+                >
+                    <div class="text-3xl mb-1">⚙️</div>
+                    <h3 class="text-lg font-bold text-gray-900">Core Eng.</h3>
+                    <p class="text-xs text-gray-500">
+                        Mechanical, Civil, Electrical, etc.
+                    </p>
+                </a>
+
+                <a
+                    href="#"
+                    class="category-card flex-shrink-0 w-48 md:w-auto block bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition duration-300"
+                    data-category="Tech"
+                >
+                    <div class="text-3xl mb-1">💻</div>
+                    <h3 class="text-lg font-bold text-gray-900">
+                        Tech & Comp.
+                    </h3>
+                    <p class="text-xs text-gray-500">
+                        Software, Data Science, AI, etc.
+                    </p>
+                </a>
+
+                <a
+                    href="#"
+                    class="category-card flex-shrink-0 w-48 md:w-auto block bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition duration-300"
+                    data-category="Specialized"
+                >
+                    <div class="text-3xl mb-1">🚀</div>
+                    <h3 class="text-lg font-bold text-gray-900">Specialized</h3>
+                    <p class="text-xs text-gray-500">
+                        Aerospace, Biomedical, etc.
+                    </p>
+                </a>
+
+                <a
+                    href="#"
+                    class="category-card flex-shrink-0 w-48 md:w-auto block bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition duration-300"
+                    data-category="Industrial"
+                >
+                    <div class="text-3xl mb-1">🏭</div>
+                    <h3 class="text-lg font-bold text-gray-900">Industrial</h3>
+                    <p class="text-xs text-gray-500">
+                        Automobile, Materials, etc.
+                    </p>
+                </a>
+
+                <a
+                    href="#"
+                    class="category-card flex-shrink-0 w-48 md:w-auto block bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition duration-300"
+                    data-category="Environmental"
+                >
+                    <div class="text-3xl mb-1">🌱</div>
+                    <h3 class="text-lg font-bold text-gray-900">Env. & Res.</h3>
+                    <p class="text-xs text-gray-500">Petroleum, Mining, etc.</p>
+                </a>
+
+                <a
+                    href="#"
+                    class="category-card flex-shrink-0 w-48 md:w-auto block bg-white p-4 rounded-xl shadow-lg hover:shadow-xl transition duration-300"
+                    data-category="Emerging"
+                >
+                    <div class="text-3xl mb-1">🔬</div>
+                    <h3 class="text-lg font-bold text-gray-900">Emerging</h3>
+                    <p class="text-xs text-gray-500">
+                        Quantum, Blockchain, IoT, etc.
+                    </p>
+                </a>
+            </div>
+
+            <div
+                id="subDomainSelection"
+                class="mt-12 p-6 bg-white rounded-xl shadow-2xl hidden"
+            >
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">
+                    Select Your Sub-Domain in
+                    <span
+                        id="selectedCategoryName"
+                        class="text-primary font-bold"
+                        >...</span
+                    >
+                </h2>
+
+                <div
+                    id="subDomainButtons"
+                    class="flex space-x-3 pb-2 overflow-x-auto whitespace-nowrap"
+                ></div>
+            </div>
+        </main>
+
+        <script type="module" src="scripts/branch.js"></script>
+    </body>
+</html>
