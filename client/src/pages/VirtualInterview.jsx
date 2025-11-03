@@ -39,7 +39,7 @@ const VirtualInterview = () => {
     // --- Session Context (from localStorage) ---
     const interviewId = localStorage.getItem("current_interview_id");
     const currentUserId = localStorage.getItem("user_id");
-    const selectedMode = localStorage.getItem("selected_interview_mode") || "virtual-video";
+    const selectedMode = localStorage.getItem("selected_interview_mode") || "video";
     const selectedType = localStorage.getItem("current_interview_type") || "Technical";
     const selectedDomain = localStorage.getItem("selected_technical_domain") || null;
 
@@ -147,21 +147,32 @@ const VirtualInterview = () => {
 
     // 📹 Request Media Access (UNCHANGED)
     const requestMediaAccess = useCallback(async () => {
-        // ... (media access logic remains the same)
-        const mediaConstraints = { video: true, audio: true };
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
-            streamRef.current = stream;
-            if (userVideoRef.current) {
-                userVideoRef.current.srcObject = stream;
-            }
-            setIsSpeaking(false);
-        } catch (err) {
-            console.error("Media access error: ", err);
-            setFeedback(prev => ({ ...prev, message: (prev.message || "") + " (WARNING: Camera/Mic blocked.)" }));
-            setIsSpeaking(false);
+    const mediaConstraints = { video: true, audio: true };
+      try {
+         const stream = await navigator.mediaDevices.getUserMedia(mediaConstraints);
+         streamRef.current = stream;
+        if (userVideoRef.current) {
+        userVideoRef.current.srcObject = stream;
+        await userVideoRef.current.play(); // <-- ensure video plays
         }
-    }, []);
+       setIsSpeaking(false);
+      } catch (err) {
+      console.error("Media access error: ", err);
+      setFeedback(prev => ({
+      ...prev,
+      message: (prev.message || "") + " (⚠️ Camera/Mic access blocked.)"
+    }));
+    setIsSpeaking(false);
+  }
+}, []);
+ 
+   useEffect(() => {
+  if (userVideoRef.current && streamRef.current) {
+    userVideoRef.current.srcObject = streamRef.current;
+  }
+}, [streamRef.current]);
+
+
 
     // 🚀 Start Interview Session (FIXED: Sets question number to 1)
     const startInterviewSession = () => {
@@ -267,20 +278,24 @@ const VirtualInterview = () => {
     
     // --- Initial Load & Cleanup useEffect ---
     useEffect(() => {
-        if (!interviewId || !currentUserId) {
-            alert("Session data missing. Redirecting to selection.");
-            navigate('/interview-selection');
-            return;
+    if (!interviewId || !currentUserId) {
+        alert("Session data missing. Redirecting to selection.");
+        navigate('/interview-selection');
+        return;
+    }
+    fetchQuestions();
+
+    // ⬇️ Move camera start logic here for debugging
+    requestMediaAccess();
+
+    return () => {
+        if (timerRef.current) clearInterval(timerRef.current);
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
         }
-        fetchQuestions();
-        
-        return () => {
-            if (timerRef.current) clearInterval(timerRef.current);
-            if (streamRef.current) {
-                streamRef.current.getTracks().forEach(track => track.stop());
-            }
-        };
-    }, [interviewId, currentUserId, navigate, fetchQuestions]);
+    };
+}, [interviewId, currentUserId, navigate, fetchQuestions]);
+
 
     // --- Question Advancement useEffect (Calls displayQuestion whenever the number changes) ---
     useEffect(() => {
@@ -322,30 +337,37 @@ const VirtualInterview = () => {
             <div className="absolute inset-0 z-10 p-6 flex flex-col justify-between">
 
                 {/* Header/Question Bar */}
-                <header className="w-full">
-                    <div className="grid grid-cols-12 gap-4 items-center bg-gray-900/50 backdrop-blur-sm p-4 rounded-xl shadow-lg text-white">
-                        
-                        <div className="col-span-3 flex items-center space-x-4">
-                            <h1 className="text-xl font-bold tracking-wider">Insta IQ</h1>
-                            <div className="text-lg font-semibold" id="interviewContext">{contextText}</div>
-                        </div>
+                 {/* --- Transparent Question Box (Fixed at Top) --- */}
+                
+                 {/* --- Transparent Question Box with Timer --- */}
+<div
+  id="questionBox"
+  className="fixed top-6 left-1/2 transform -translate-x-1/2 
+             w-11/12 max-w-4xl flex justify-between items-center
+             bg-indigo-900/40 backdrop-blur-xl border border-indigo-400/30
+             rounded-2xl px-6 py-4 shadow-[0_0_15px_rgba(99,102,241,0.5)]
+             text-white font-semibold text-lg tracking-wide z-20"
+>
+  {/* Question Text */}
+  <span className="flex-1 text-center drop-shadow-lg">
+    {feedback.message
+      ? feedback.message
+      : currentQuestionNumber === 0
+      ? "Press 'Start Interview' to begin."
+      : "Waiting for next question..."}
+  </span>
 
-                        <div className="col-span-7 text-left">
-                            <div className="bg-white/80 backdrop-blur-md p-2 rounded-lg text-gray-900 shadow-md">
-                                <p id="currentQuestionDisplay" className="text-xl font-bold">
-                                    {feedback.message || "Ready to start interview."}
-                                </p>
-                            </div>
-                        </div>
+  {/* Timer */}
+  <span className="ml-4 px-4 py-2 bg-black/40 rounded-xl border border-indigo-300/40 font-bold text-white text-base shadow-lg">
+    ⏱ {`${Math.floor(interviewTimeLeft / 60)
+      .toString()
+      .padStart(2, "0")}:${(interviewTimeLeft % 60)
+      .toString()
+      .padStart(2, "0")}`}
+  </span>
+</div>
 
-                        <div className="col-span-2 flex flex-col items-end space-y-1">
-                            <div id="interviewTimer" className={`py-1 px-3 rounded-md text-lg font-mono font-bold ${interviewTimeLeft < 60 ? 'bg-red-600/90' : 'bg-indigo-600/90'}`}>{formattedTime}</div>
-                            <p id="evaluationFeedbackDisplay" className={`text-xs font-semibold ${feedback.score !== null ? 'text-green-400' : 'text-gray-400'}`}>
-                                {feedback.score !== null ? `Score: ${feedback.score}/10` : 'No score yet'}
-                            </p>
-                        </div>
-                    </div>
-                </header>
+
 
                 {/* Start Button (Centered) */}
                 <main className="flex-grow flex flex-col items-center justify-center">
@@ -362,63 +384,92 @@ const VirtualInterview = () => {
                 </main>
 
                 {/* Footer Controls */}
-                <footer id="inInterviewControls" className={`bg-gray-900/70 backdrop-blur-md p-4 rounded-xl shadow-lg w-full flex flex-col space-y-4 ${isInterviewActive || currentQuestionNumber > questions.length ? '' : 'hidden'}`}>
+               <footer
+  id="inInterviewControls"
+  className={`absolute bottom-0 left-0 right-0 bg-gray-900/70 backdrop-blur-md p-6 rounded-t-xl shadow-lg w-full flex flex-col space-y-5 ${
+    isInterviewActive || currentQuestionNumber > questions.length ? "" : "hidden"
+  }`}
+>
+ 
 
-                    <textarea 
-                        id="answerInput" 
-                        rows="3" 
-                        placeholder="Type your answer here, or press 'Start Speaking'..." 
-                        value={answerInput}
-                        onChange={(e) => setAnswerInput(e.target.value)}
-                        readOnly={isSpeaking}
-                        disabled={currentQuestionNumber > questions.length}
-                        className="w-full p-3 border-none rounded-lg text-gray-800 focus:ring-indigo-500 resize-none"
-                    />
+  {/* Answer Input Box */}
+  <textarea
+    id="answerInput"
+    rows="3"
+    placeholder="Type your answer here, or press 'Start Speaking'..."
+    value={answerInput}
+    onChange={(e) => setAnswerInput(e.target.value)}
+    readOnly={isSpeaking}
+    disabled={currentQuestionNumber > questions.length}
+    className="w-full p-4 rounded-lg text-gray-900 focus:ring-2 focus:ring-indigo-500 resize-none outline-none shadow-inner bg-white/80"
+  />
 
-                    <div className="flex justify-between items-center">
-                        
-                        {/* Speak/Toggle Button */}
-                        <button 
-                            id="speakToggleBtn" 
-                            onClick={toggleSpeaking}
-                            className={`flex items-center px-4 py-2 text-white font-semibold rounded-full transition duration-150 disabled:bg-gray-500 ${isSpeaking ? 'bg-red-600/90 hover:bg-red-700/90' : 'bg-green-600/90 hover:bg-green-700/90'}`} 
-                            disabled={!streamRef.current || currentQuestionNumber > questions.length}
-                        >
-                            <svg className="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4z" clipRule="evenodd" />
-                                <path fillRule="evenodd" d="M15.5 8.5a.5.5 0 01-.5.5h-1a.5.5 0 01-.5-.5v-4a.5.5 0 01.5-.5h1a.5.5 0 01.5.5v4zM4.5 8.5a.5.5 0 01-.5.5H3a.5.5 0 01-.5-.5v-4a.5.5 0 01.5-.5h1a.5.5 0 01.5.5v4zM10 12a5 5 0 005-5v-1a.5.5 0 011 0v1a6 6 0 01-12 0v-1a.5.5 0 011 0v1a5 5 0 005 5z" clipRule="evenodd" />
-                            </svg>
-                            <span id="speakText">{isSpeaking ? 'Recording...' : 'Start Speaking'}</span>
-                        </button>
+  {/* Controls Section */}
+  <div className="flex flex-wrap justify-between items-center gap-4">
+    {/* Speak Button */}
+    <button
+      id="speakToggleBtn"
+      onClick={toggleSpeaking}
+      className={`flex items-center px-5 py-2 text-white font-semibold rounded-full transition duration-150 ${
+        isSpeaking
+          ? "bg-red-600 hover:bg-red-700"
+          : "bg-green-600 hover:bg-green-700"
+      } disabled:bg-gray-500`}
+      disabled={!streamRef.current || currentQuestionNumber > questions.length}
+    >
+      <svg
+        className="w-5 h-5 mr-2"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fillRule="evenodd"
+          d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4z"
+          clipRule="evenodd"
+        />
+        <path
+          fillRule="evenodd"
+          d="M15.5 8.5a.5.5 0 01-.5.5h-1a.5.5 0 01-.5-.5v-4a.5.5 0 01.5-.5h1a.5.5 0 01.5.5v4zM4.5 8.5a.5.5 0 01-.5.5H3a.5.5 0 01-.5-.5v-4a.5.5 0 01.5-.5h1a.5.5 0 01.5.5v4zM10 12a5 5 0 005-5v-1a.5.5 0 011 0v1a6 6 0 01-12 0v-1a.5.5 0 011 0v1a5 5 0 005 5z"
+          clipRule="evenodd"
+        />
+      </svg>
+      <span id="speakText">
+        {isSpeaking ? "Recording..." : "Start Speaking"}
+      </span>
+    </button>
 
-                        <div className="space-x-4 flex">
-                            <button 
-                                id="skipBtn" 
-                                onClick={skipQuestion}
-                                className="px-5 py-2 text-white font-semibold bg-yellow-600/90 hover:bg-yellow-700/90 rounded-full transition duration-150 disabled:bg-gray-500" 
-                                disabled={isSkipDisabled}
-                            >
-                                Skip Question
-                            </button>
-                            <button 
-                                id="nextBtn" 
-                                onClick={submitAnswer}
-                                className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-full shadow-md transition duration-150 disabled:bg-gray-500" 
-                                disabled={isNextDisabled}
-                            >
-                                Next Question
-                            </button>
-                            <button 
-                                id="endBtn" 
-                                onClick={() => endInterview(false)}
-                                className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-full shadow-md transition duration-150"
-                                disabled={isEndDisabled}
-                            >
-                                End Interview
-                            </button>
-                        </div>
-                    </div>
-                </footer>
+    {/* Navigation Buttons */}
+    <div className="flex flex-wrap gap-3 justify-center">
+      <button
+        id="skipBtn"
+        onClick={skipQuestion}
+        className="px-5 py-2 text-white font-semibold bg-yellow-600 hover:bg-yellow-700 rounded-full transition duration-150 disabled:bg-gray-500"
+        disabled={isSkipDisabled}
+      >
+        Skip
+      </button>
+      <button
+        id="nextBtn"
+        onClick={submitAnswer}
+        className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-full shadow-md transition duration-150 disabled:bg-gray-500"
+        disabled={isNextDisabled}
+      >
+        Next
+      </button>
+      <button
+        id="endBtn"
+        onClick={() => endInterview(false)}
+        className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-full shadow-md transition duration-150"
+        disabled={isEndDisabled}
+      >
+        End
+      </button>
+    </div>
+  </div>
+</footer>
+
+
             </div>
         </div>
     );
