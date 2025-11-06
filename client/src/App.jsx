@@ -17,6 +17,10 @@ import VirtualInterview from './pages/VirtualInterview.jsx';
 import ReportsPage from './pages/ReportsPage.jsx'; 
 import InterviewHistoryPage from './pages/InterviewHistoryPage.jsx'; 
 import ProfilePage from './pages/ProfilePage.jsx'; 
+import ForgotPassword from './pages/ForgotPassword.jsx';
+import ResetPassword from "./pages/ResetPassword.jsx";
+
+
 
 // --- Pages (Admin Imports) ---
 import AdminLoginPage from './pages/admin/AdminLoginPage.jsx';
@@ -38,6 +42,9 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/signup" element={<SignUp />} /> 
           <Route path="/login" element={<Login />} /> 
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
 
           {/* PROTECTED USER ROUTES */}
           <Route path="/interview-selection" element={<ProtectedRoute><InterviewSelection /></ProtectedRoute>} />

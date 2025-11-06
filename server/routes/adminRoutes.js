@@ -1,71 +1,70 @@
-// routes/adminRoutes.js
 const express = require("express");
-const router = express.Router();
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
+const Admin = require("../models/Admin");
 const User = require("../models/User");
-const InterviewHistory = require("../models/InterviewHistory");
+const Interview = require("../models/Interview");
 
-// --- Admin Login ---
+const router = express.Router();
+
+// ======================
+// 🔹 Admin Login (Plain password version)
+// ======================
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check admin credentials from env
-    if (
-      email === process.env.ADMIN_EMAIL &&
-      password === process.env.ADMIN_PASSWORD
-    ) {
-      const token = jwt.sign({ email, role: "admin" }, process.env.JWT_SECRET, {
-        expiresIn: "2h",
-      });
-      return res.json({ success: true, token });
-    } else {
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
+    const admin = await Admin.findOne({ email });
+    if (!admin) {
+      return res.status(400).json({ message: "Invalid email or password" });
     }
-  } catch (err) {
-    console.error("Admin login error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
 
-// --- Admin Dashboard Overview ---
-router.get("/dashboard", async (req, res) => {
-  try {
-    const totalUsers = await User.countDocuments();
-    const totalInterviews = await InterviewHistory.countDocuments();
-    const averageScore = await InterviewHistory.aggregate([
-      { $group: { _id: null, avgScore: { $avg: "$totalAverage" } } },
-    ]);
+    // Compare directly (no hashing)
+    if (admin.password !== password) {
+      return res.status(400).json({ message: "Invalid email or password" });
+    }
 
-    const recentInterviews = await InterviewHistory.find()
-      .populate("userId", "name email")
-      .sort({ date: -1 })
-      .limit(5);
+    const token = jwt.sign(
+      { id: admin._id, email: admin.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
 
     res.json({
-      totalUsers,
-      totalInterviews,
-      averageScore:
-        averageScore.length > 0 ? averageScore[0].avgScore.toFixed(1) : 0,
-      recentInterviews,
+      message: "Login successful",
+      token,
+      admin: { _id: admin._id, name: admin.name, email: admin.email },
     });
-  } catch (err) {
-    console.error("Dashboard fetch error:", err);
-    res.status(500).json({ message: "Error fetching dashboard data" });
+  } catch (error) {
+    console.error("Admin Login Error:", error);
+    res.status(500).json({ message: "Server error during login" });
   }
 });
 
-// --- All Users List ---
+// ======================
+// 🔹 Fetch All Users (Dashboard Data)
+// ======================
 router.get("/users", async (req, res) => {
   try {
-    const users = await User.find({}, "name email createdAt").sort({
-      createdAt: -1,
-    });
-    res.json({ count: users.length, users });
-  } catch (err) {
-    console.error("Error fetching users:", err);
+    const users = await User.find({}, "name email createdAt");
+    res.json(users);
+  } catch (error) {
+    console.error("Fetch Users Error:", error);
     res.status(500).json({ message: "Error fetching users" });
+  }
+});
+
+// ======================
+// 🔹 Fetch All Interviews
+// ======================
+router.get("/interviews", async (req, res) => {
+  try {
+    const interviews = await Interview.find({})
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 });
+    res.json(interviews);
+  } catch (error) {
+    console.error("Fetch Interviews Error:", error);
+    res.status(500).json({ message: "Error fetching interviews" });
   }
 });
 
