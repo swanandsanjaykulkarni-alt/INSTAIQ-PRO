@@ -57,9 +57,22 @@ const Login = () => {
 
       const data = await res.json();
       if (res.ok) {
+        // 🧹 Clear old sessions before saving new user
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // ✅ Save new user details
         localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        navigate("/interview-selection");
+        localStorage.setItem("user_id", data.user._id);
+        localStorage.setItem("user_name", data.user.name);
+        localStorage.setItem("user_email", data.user.email);
+
+        setMessage({ text: "Login successful! Redirecting...", isError: false });
+
+        // ✅ Use full reload for a fresh session
+        setTimeout(() => {
+          window.location.href = "/interview-selection";
+        }, 500);
       } else {
         setMessage({ text: data.message || "Google login failed", isError: true });
       }
@@ -85,10 +98,21 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
+        // 🧹 Clear old session data before saving new login
+        localStorage.clear();
+        sessionStorage.clear();
+
+        // ✅ Store new user session
         localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("user_id", data.user._id);
+        localStorage.setItem("user_name", data.user.name);
+        localStorage.setItem("user_email", data.user.email);
+
         setMessage({ text: "Login successful! Redirecting...", isError: false });
-        setTimeout(() => navigate("/interview-selection"), 1000);
+
+        setTimeout(() => {
+          window.location.href = "/interview-selection";
+        }, 700);
       } else {
         setMessage({ text: data.message || "Invalid credentials", isError: true });
       }
@@ -104,10 +128,7 @@ const Login = () => {
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">Sign In to Your Account</h2>
           <p className="mt-2 text-sm text-gray-600">
             Or{" "}
-            <Link
-              to="/signup"
-              className="text-indigo-600 font-medium hover:text-indigo-500"
-            >
+            <Link to="/signup" className="text-indigo-600 font-medium hover:text-indigo-500">
               create a new account
             </Link>
           </p>
@@ -157,24 +178,18 @@ const Login = () => {
             </button>
           </form>
 
-          {/* Forgot Password Link */}
           <div className="text-center mt-4">
-            <Link
-              to="/forgot-password"
-              className="text-sm text-indigo-600 hover:text-indigo-500"
-            >
+            <Link to="/forgot-password" className="text-sm text-indigo-600 hover:text-indigo-500">
               Forgot your password?
             </Link>
           </div>
 
-          {/* OR Divider */}
           <div className="flex items-center my-6">
             <div className="flex-grow h-px bg-gray-300"></div>
             <span className="px-3 text-sm text-gray-500">OR</span>
             <div className="flex-grow h-px bg-gray-300"></div>
           </div>
 
-          {/* ✅ Google Login Button (Bottom Section) */}
           <div className="flex justify-center">
             <div id="googleLoginDiv"></div>
           </div>

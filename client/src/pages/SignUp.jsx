@@ -57,6 +57,9 @@ const SignUp = () => {
 
       const data = await res.json();
       if (res.ok) {
+        // 🧹 Clear old session
+        localStorage.clear();
+        // ✅ Save new user session
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
         navigate("/interview-selection");
@@ -86,6 +89,8 @@ const SignUp = () => {
 
       if (response.ok) {
         setMessage({ text: "Account created! Redirecting...", isError: false });
+        // 🧹 Clear old data just in case
+        localStorage.clear();
         setTimeout(() => navigate("/login"), 1500);
       } else {
         setMessage({ text: data.message || "Registration failed", isError: true });
@@ -167,14 +172,12 @@ const SignUp = () => {
             </button>
           </form>
 
-          {/* OR Divider */}
           <div className="flex items-center my-6">
             <div className="flex-grow h-px bg-gray-300"></div>
             <span className="px-3 text-sm text-gray-500">OR</span>
             <div className="flex-grow h-px bg-gray-300"></div>
           </div>
 
-          {/* ✅ Google Sign-Up Button (Bottom Section) */}
           <div className="flex justify-center">
             <div id="googleSignUpDiv"></div>
           </div>

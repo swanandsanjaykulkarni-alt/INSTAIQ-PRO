@@ -1,6 +1,9 @@
 // client/src/pages/ChatInterview.jsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Tippy from "@tippyjs/react";
+import "tippy.js/dist/tippy.css";
+
 
 // --- CONFIGURATION & API ENDPOINTS ---
 const API_BASE_URL = "http://localhost:3000";
@@ -315,64 +318,71 @@ const ChatInterview = () => {
 
                 {/* Footer and Controls */}
                 <footer className="p-4 border-t border-gray-200 bg-white flex-shrink-0">
-                    
-                    {/* Start Button (Visible only before interview starts) */}
-                    {!isInterviewActive && questions.length > 0 && (
-                        <button 
-                            id="startInterviewBtn" 
-                            onClick={startInterview}
-                            className={`w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xl font-bold rounded-lg shadow-md transition duration-300 ${isLoading ? 'disabled:bg-gray-400' : ''}`}
-                            disabled={isLoading || questions.length === 0}
-                        >
-                            Start Chat Interview
-                        </button>
-                    )}
+  {!isInterviewActive && questions.length > 0 && (
+    <Tippy content="Click to start your AI-powered chat interview" placement="top">
+      <button 
+        id="startInterviewBtn" 
+        onClick={startInterview}
+        className={`w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xl font-bold rounded-lg shadow-md transition duration-300 ${isLoading ? 'disabled:bg-gray-400' : ''}`}
+        disabled={isLoading || questions.length === 0}
+      >
+        Start Chat Interview
+      </button>
+    </Tippy>
+  )}
 
-                    {/* In-Interview Controls (Visible only during active interview) */}
-                    {(isInterviewActive || currentQuestionIndex > questions.length) && (
-                        <div id="inInterviewControls" className="flex flex-col space-y-3">
-                            <textarea 
-                                id="answerInput" 
-                                rows="3" 
-                                placeholder="Type your detailed answer here..." 
-                                value={answerInput}
-                                onChange={(e) => setAnswerInput(e.target.value)}
-                                disabled={currentQuestionIndex > questions.length}
-                                className="w-full p-3 border border-gray-300 rounded-lg text-gray-800 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
-                            ></textarea>
-                            
-                            <div className="flex justify-between items-center">
-                                <button 
-                                    id="skipBtn" 
-                                    onClick={skipQuestion}
-                                    className="px-5 py-2 text-white font-semibold bg-yellow-600 hover:bg-yellow-700 rounded-lg transition disabled:bg-gray-500" 
-                                    disabled={isSkipDisabled}
-                                >
-                                    Skip Question
-                                </button>
-                                
-                                <div className="space-x-4 flex">
-                                    <button 
-                                        id="nextBtn" 
-                                        onClick={submitAnswer}
-                                        className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-md transition disabled:bg-gray-500" 
-                                        disabled={isNextDisabled}
-                                    >
-                                        Submit & Next
-                                    </button>
-                                    <button 
-                                        id="endBtn" 
-                                        onClick={() => endInterview(false)}
-                                        className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md transition"
-                                        disabled={isEndDisabled}
-                                    >
-                                        End Interview
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </footer>
+  {(isInterviewActive || currentQuestionIndex > questions.length) && (
+    <div id="inInterviewControls" className="flex flex-col space-y-3">
+      <textarea 
+        id="answerInput" 
+        rows="3" 
+        placeholder="Type your detailed answer here..." 
+        value={answerInput}
+        onChange={(e) => setAnswerInput(e.target.value)}
+        disabled={currentQuestionIndex > questions.length}
+        className="w-full p-3 border border-gray-300 rounded-lg text-gray-800 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+      ></textarea>
+      
+      <div className="flex justify-between items-center">
+        <Tippy content="Skip this question and move to the next one" placement="top">
+          <button 
+            id="skipBtn" 
+            onClick={skipQuestion}
+            className="px-5 py-2 text-white font-semibold bg-yellow-600 hover:bg-yellow-700 rounded-lg transition disabled:bg-gray-500" 
+            disabled={isSkipDisabled}
+          >
+            Skip Question
+          </button>
+        </Tippy>
+
+        <div className="space-x-4 flex">
+          <Tippy content="Submit your answer and load the next question" placement="top">
+            <button 
+              id="nextBtn" 
+              onClick={submitAnswer}
+              className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-md transition disabled:bg-gray-500" 
+              disabled={isNextDisabled}
+            >
+              Submit & Next
+            </button>
+          </Tippy>
+
+          <Tippy content="Finish your interview and view the detailed report" placement="top">
+            <button 
+              id="endBtn" 
+              onClick={() => endInterview(false)}
+              className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-md transition"
+              disabled={isEndDisabled}
+            >
+              End Interview
+            </button>
+          </Tippy>
+        </div>
+      </div>
+    </div>
+  )}
+</footer>
+
             </div>
         </div>
     );
