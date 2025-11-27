@@ -20,11 +20,17 @@ const answerSchema = new mongoose.Schema({
 
 const interviewSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  category: { type: String, required: true }, // HR, Technical, Personal
-  branch: { type: String, default: null }, // for technical
-  mode: { type: String, required: true }, // virtual / chat
+  category: { type: String, required: true }, 
+  branch: { type: String, default: null },
+  mode: { type: String, required: true }, 
   date: { type: Date, default: Date.now },
   totalAverage: { type: Number, default: 0 },
+  isCompleted: { type: Boolean, default: false },
+
+  // 🔥 NEW FIELDS FOR CHEATING DETECTION
+  forcedEnd: { type: Boolean, default: false },  // interview ended forcefully
+  cheatReason: { type: String, default: null },   // why it ended
+
   answers: [answerSchema],
 });
 

@@ -19,6 +19,8 @@ import InterviewHistoryPage from './pages/InterviewHistoryPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx'; 
 import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from "./pages/ResetPassword.jsx";
+//import ChatInterview from './pages/ChatInterview';
+import CheatedPage from './pages/CheatedPage';
 
 
 
@@ -52,11 +54,13 @@ function AppContent() {
           <Route path="/mode-selection" element={<ProtectedRoute><ModeSelection /></ProtectedRoute>} />
           <Route path="/chat-interview" element={<ProtectedRoute><ChatInterview /></ProtectedRoute>} />
           <Route path="/virtual-interview" element={<ProtectedRoute><VirtualInterview /></ProtectedRoute>} />
+           <Route path="/cheated" element={<CheatedPage />} />
 
           {/* USER DATA VIEWS */}
           <Route path="/reports" element={<ProtectedRoute><ReportsPage /></ProtectedRoute>} />
           <Route path="/interview-history" element={<ProtectedRoute><InterviewHistoryPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          
 
           {/* ADMIN ROUTES */}
           <Route path="/admin/login" element={<AdminLoginPage />} />

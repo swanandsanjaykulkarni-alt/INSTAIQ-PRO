@@ -4,39 +4,34 @@ const InterviewHistory = require("../models/InterviewHistory");
 const PDFDocument = require("pdfkit");
 
 /* -------------------------- 🔹 Start Interview ----------------------------- */
-
 router.post("/start", async (req, res) => {
-    try {
-        const { userId, type } = req.body; // type will be HR, Technical, or Personal
+  try {
+    const { userId, type } = req.body;
 
-        if (!userId || !type) {
-            return res.status(400).json({ 
-                message: "userId and interview type are required to start the session." 
-            });
-        }
-        
-        // 1. Create a minimal new InterviewHistory entry
-        // We set the category (type) here, but keep other fields null/empty for now.
-        const newInterview = new InterviewHistory({
-            userId: userId,
-            category: type,
-            mode: "Text", // Default mode, can be updated later
-            totalAverage: 0,
-            answers: [],
-        });
-
-        await newInterview.save();
-
-        // 2. Return the new interview's ID to the frontend
-        res.status(201).json({ 
-            message: "✅ Interview session started.", 
-            interviewId: newInterview._id 
-        });
-
-    } catch (err) {
-        console.error("❌ Start interview error:", err);
-        res.status(500).json({ message: "Server error during start", error: err.message });
+    if (!userId || !type) {
+      return res.status(400).json({ message: "userId & type are required." });
     }
+
+    // Create a new draft interview
+    const newInterview = new InterviewHistory({
+      userId,
+      category: type,
+      mode: "Text",
+      answers: [],
+      isCompleted: false
+    });
+
+    await newInterview.save();
+
+    return res.status(201).json({
+      message: "Interview started.",
+      interviewId: newInterview._id
+    });
+
+  } catch (err) {
+    console.error("START ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 
@@ -45,93 +40,156 @@ router.post("/start", async (req, res) => {
 // This mock endpoint lets you test full flow (no ChatGPT API needed)
 
 router.post("/evaluate", async (req, res) => {
-// ... (rest of the /evaluate code remains the same)
-    try {
-        const { question, userAnswer} = req.body;
+  try {
+    const { question, userAnswer } = req.body;
 
-        if (!question || !userAnswer) {
-            return res
-                .status(400)
-                .json({ message: "Question and answer are required." });
-        }
-
-        // 🔹 Mock evaluation data (temporary for testing)
-        const mockEvaluation = {
-            Communication: 8,
-            SubjectMatterExpertise: 7,
-            Confidence: 8,
-            BodyLanguage: 7,
-            Presentation: 8,
-            Voice: 7,
-            Tone: 8,
-            Pitch: 7,
-            AnswerSatisfaction: 8,
-            TotalScore: 7.7,
-            Feedback:
-                "Good explanation! Try to include more examples next time.",
-        };
-
-        return res.json({ evaluation: mockEvaluation });
-    } catch (err) {
-        console.error("❌ Mock Evaluation error:", err);
-        res.status(500).json({ message: "Server error", error: err.message });
+    if (!question || !userAnswer) {
+      return res.status(400).json({ message: "Question & answer required." });
     }
+
+    const mockEvaluation = {
+      Communication: 8,
+      SubjectMatterExpertise: 7,
+      Confidence: 8,
+      BodyLanguage: 7,
+      Presentation: 8,
+      Voice: 7,
+      Tone: 8,
+      Pitch: 7,
+      AnswerSatisfaction: 8,
+      TotalScore: 7.7,
+      Feedback: "Good explanation."
+    };
+
+    return res.json({ evaluation: mockEvaluation });
+
+  } catch (err) {
+    console.error("EVALUATE ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 });
 
 /* -------------------------- 🔹 Save Interview ----------------------------- */
 
 router.post("/save", async (req, res) => {
-// ... (rest of the /save code remains the same)
-    try {
-        const { userId, category, branch, mode, answers } = req.body;
+  try {
+    const { interviewId, branch, mode, answers, userId } = req.body;
 
-        if (!userId || !category || !mode || !Array.isArray(answers)) {
-            return res.status(400).json({
-                message: "userId, category, mode, and answers[] are required.",
-            });
-        }
-
-        const totalScores = answers.map((a) =>
-            a.evaluation?.TotalScore ? Number(a.evaluation.TotalScore) : 0,
-        );
-
-        const avg =
-            totalScores.length > 0
-                ? totalScores.reduce((a, b) => a + b, 0) / totalScores.length
-                : 0;
-
-        const interview = new InterviewHistory({
-            userId,
-            category,
-            branch: branch || null,
-            mode,
-            totalAverage: Math.round(avg * 100) / 100,
-            answers,
-        });
-
-        await interview.save();
-        res.json({ message: "✅ Interview saved successfully.", interview });
-    } catch (err) {
-        console.error("❌ Save interview error:", err);
-        res.status(500).json({ message: "Server error", error: err.message });
+    if (!mode || !Array.isArray(answers)) {
+      return res.status(400).json({ message: "mode & answers are required." });
     }
+
+    let interview;
+
+    // CASE 1: front-end sent valid interviewId → update it
+    if (interviewId) {
+      interview = await InterviewHistory.findById(interviewId);
+    }
+
+    // CASE 2: if not found → find last incomplete interview of that user
+    if (!interview && userId) {
+      interview = await InterviewHistory.findOne({
+        userId,
+        isCompleted: false
+      }).sort({ date: -1 });
+    }
+
+    // CASE 3: if still not found → create new interview
+    if (!interview) {
+      interview = new InterviewHistory({
+        userId,
+        category: "Technical",
+        mode,
+        branch,
+        answers: [],
+        isCompleted: false
+      });
+    }
+
+    // Calculate average score
+    const totalScores = answers.map(a => a.evaluation?.TotalScore || 0);
+    const avg =
+      totalScores.length > 0
+        ? totalScores.reduce((a, b) => a + b, 0) / totalScores.length
+        : 0;
+
+    // Apply update
+    interview.branch = branch || interview.branch;
+    interview.mode = mode;
+    interview.answers = answers;
+    interview.totalAverage = Math.round(avg * 100) / 100;
+    interview.isCompleted = true;
+    interview.date = Date.now();
+
+    await interview.save();
+
+    return res.json({
+      message: "Interview saved successfully.",
+      interview
+    });
+
+  } catch (err) {
+    console.error("SAVE ERROR:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
 });
+
+router.post("/force-end", async (req, res) => {
+  try {
+    const { interviewId, reason } = req.body;
+
+    if (!interviewId) {
+      return res.status(400).json({ message: "Interview ID required" });
+    }
+
+    const interview = await InterviewHistory.findById(interviewId);
+
+    if (!interview) {
+      return res.status(404).json({ message: "Interview not found" });
+    }
+
+    interview.isCompleted = true;
+    interview.forcedEnd = true;
+    interview.cheatReason = reason || "Cheating - Tab switch detected";
+    interview.totalAverage = 0; // Make score zero if cheating
+    interview.date = Date.now();
+
+    await interview.save();
+
+    return res.json({ 
+      message: "Interview forced to end (Cheating).", 
+      interview 
+    });
+
+  } catch (err) {
+    console.error("FORCE END ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 
 /* -------------------------- 🔹 Get User History --------------------------- */
 
 router.get("/history/:userId", async (req, res) => {
-// ... (rest of the /history code remains the same)
-    try {
-        const interviews = await InterviewHistory.find({
-            userId: req.params.userId,
-        }).sort({ date: -1 });
+  try {
+    const interviews = await InterviewHistory.find({
+      userId: req.params.userId,
+      isCompleted: true
+    })
+      .sort({ date: -1 });
 
-        res.json({ count: interviews.length, interviews });
-    } catch (err) {
-        console.error("❌ History fetch error:", err);
-        res.status(500).json({ message: "Server error", error: err.message });
-    }
+    return res.json({
+      count: interviews.length,
+      interviews
+    });
+
+  } catch (err) {
+    console.error("HISTORY ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 });
+
+
 
 /* -------------------------- 🔹 Download Detailed PDF Report ------------------------ */
 router.get("/download/:id", async (req, res) => {

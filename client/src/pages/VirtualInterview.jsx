@@ -423,6 +423,22 @@ const toggleSpeaking = () => {
   };
 }, [currentQuestionNumber]);
 
+// --- Detect Tab Change and Redirect to Cheated Page ---
+useEffect(() => {
+  const handleVisibilityChange = () => {
+    if (document.hidden) {
+      navigate("/cheated");
+    }
+  };
+
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+
+  return () => {
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+  };
+}, [navigate]);
+
+
 
     // Conditional button states
     const isStartDisabled = isLoading || questions.length === 0;

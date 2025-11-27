@@ -63,10 +63,55 @@ const ChatInterview = () => {
     const interviewId = localStorage.getItem("current_interview_id");
     const currentUserId = localStorage.getItem("user_id");
     const selectedType = localStorage.getItem("current_interview_type") || "Technical";
+    
     const selectedDomain = localStorage.getItem("selected_technical_domain") || null;
     const selectedMode = localStorage.getItem("selected_interview_mode") || "chat";
     
     const contextText = `${selectedType}${selectedDomain ? ` / ${selectedDomain}` : ''} / ${selectedMode}`;
+
+    //tab changing function
+ useEffect(() => {
+    const handleCheat = async () => {
+        console.log("User switched tab — ending interview");
+
+        // Mark as cheated
+        localStorage.setItem("cheated", "true");
+
+        // Optional: Notify backend
+        try {
+            await fetch("http://localhost:5000/api/interviews/force-end", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    interviewId: interviewId,
+                    reason: "User switched tab"
+                })
+            });
+        } catch (err) {
+            console.error("Error notifying server about cheating:", err);
+        }
+
+        // Redirect to cheated page
+        navigate("/cheated", { replace: true });
+    };
+
+    const handleVisibility = () => {
+        if (document.hidden) handleCheat();
+    };
+
+    const handleBlur = () => {
+        handleCheat();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+        document.removeEventListener("visibilitychange", handleVisibility);
+        window.removeEventListener("blur", handleBlur);
+    };
+}, [interviewId, navigate]);
+
 
     // --- Functions ---
 
