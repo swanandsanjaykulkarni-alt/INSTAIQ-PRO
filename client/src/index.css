@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optional: Custom theme colors */
+:root {
+  --primary-color: #4f46e5; /* Indigo 600 */
+}
+
+.text-primary {
+  color: var(--primary-color);
+}
+
+.bg-primary {
+  background-color: var(--primary-color);
+}
+
+.hover\:bg-primary-dark:hover {
+  background-color: #4338ca; /* Indigo 700 */
+}

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Insta IQ - Virtual Interview</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="styles.css" />
+        <style>
+            :root {
+                --primary-color: #4f46e5; /* Indigo 600 */
+            }
+
+            /* Utility Classes for this page */
+            .bg-primary-dark-opac {
+                background-color: rgba(67, 56, 202, 0.95);
+            } /* Indigo 700 95% opacity */
+            .bg-dark-opac {
+                background-color: rgba(17, 24, 39, 0.9);
+            } /* Gray 900 90% opacity */
+
+            /* 1. Full Screen Video Background */
+            #video-background,
+            #voice-background {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                z-index: 10;
+            }
+
+            #video-background video {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            /* 2. Voice-Only Static Background */
+            #voice-background {
+                background-color: #1f2937;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                color: #94a3b8;
+                font-size: 2rem;
+                text-align: center;
+            }
+
+            /* 3. Floating Content Container (MUST BE ABOVE BACKGROUND) */
+            .floating-content {
+                position: relative;
+                z-index: 20; /* Ensure content is above the video */
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                padding: 1.5rem; /* Increased padding */
+            }
+        </style>
+    </head>
+    <body>
+        <div id="video-background">
+            <video id="userVideoFeed" autoplay muted></video>
+        </div>
+
+        <div id="voice-background" class="hidden">
+            <span class="text-9xl mb-6">🎙️</span>
+            <h2 class="text-3xl font-bold">Voice Interview Mode</h2>
+            <p class="text-lg mt-2">
+                Your camera is off. Please press "Start Interview" below.
+            </p>
+        </div>
+
+        <div class="floating-content">
+            <div class="w-full">
+                <div
+                    class="max-w-7xl mx-auto p-4 flex justify-between items-center text-white font-semibold rounded-xl bg-dark-opac shadow-2xl"
+                >
+                    <div class="flex-1 pr-4">
+                        <p class="text-xs text-gray-400" id="interviewContext">
+                            Loading context...
+                        </p>
+                        <div
+                            id="currentQuestionDisplay"
+                            class="text-xl font-bold pt-1"
+                        >
+                            Interview system initializing...
+                        </div>
+                    </div>
+
+                    <div
+                        class="flex items-center text-3xl font-extrabold text-yellow-300"
+                    >
+                        <span id="interviewTimer">40:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-grow"></div>
+
+            <div class="w-full">
+                <div
+                    class="max-w-4xl mx-auto p-6 bg-dark-opac rounded-xl shadow-2xl"
+                >
+                    <h3
+                        class="text-lg font-bold text-white mb-3 pb-2 border-b border-white/30"
+                    >
+                        Real-Time Transcript & Input
+                    </h3>
+
+                    <textarea
+                        id="answerInput"
+                        class="w-full h-24 p-3 border border-white/30 rounded-lg bg-gray-700/50 text-white placeholder-gray-300 focus:ring-yellow-300 focus:border-yellow-300 resize-none transition duration-150"
+                        placeholder="Your spoken answer will appear here. You can also type manually..."
+                        disabled
+                    ></textarea>
+
+                    <div class="mt-4 flex flex-wrap justify-center gap-3">
+                        <button
+                            id="startInterviewBtn"
+                            class="w-full py-4 text-xl font-bold text-white bg-primary-dark-opac rounded-lg hover:bg-primary transition duration-150"
+                            disabled
+                        >
+                            Load Complete. Press to Start Interview
+                        </button>
+
+                        <div
+                            id="inInterviewControls"
+                            class="flex flex-wrap justify-center gap-3 w-full hidden"
+                        >
+                            <button
+                                id="speakToggleBtn"
+                                class="flex-1 min-w-[120px] py-3 text-white bg-green-600/90 rounded-lg hover:bg-green-700 transition duration-150 font-semibold disabled:bg-gray-500"
+                            >
+                                <span id="speakText">Start Speaking</span>
+                            </button>
+
+                            <button
+                                id="skipBtn"
+                                class="flex-1 min-w-[120px] py-3 text-gray-900 bg-yellow-400/90 rounded-lg hover:bg-yellow-500 transition duration-150 font-semibold disabled:bg-gray-500"
+                            >
+                                Skip
+                            </button>
+
+                            <button
+                                id="nextBtn"
+                                class="flex-1 min-w-[120px] py-3 text-white bg-primary-dark-opac rounded-lg hover:bg-primary transition duration-150 font-semibold disabled:bg-gray-500"
+                            >
+                                Next Question
+                            </button>
+
+                            <button
+                                id="endBtn"
+                                class="flex-1 min-w-[120px] py-3 text-white bg-red-600/90 rounded-lg hover:bg-red-700 transition duration-150 font-semibold"
+                            >
+                                End Interview
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script type="module" src="scripts/virtual-interview.js"></script>
+    </body>
+</html>

@@ -1,0 +1,73 @@
+/* -------------------------- 🔹 Evaluate Answer ----------------------------- */
+/*
+
+router.post("/evaluate", async (req, res) => {
+    try {
+        const { question, answer } = req.body;
+
+        if (!question || !answer) {
+            return res
+                .status(400)
+                .json({ message: "Question and answer are required." });
+        }
+
+        const prompt = buildEvaluationPrompt(question, answer);
+
+        // 🔹 Call ChatGPT API
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4o-mini", // You can use 'gpt-4o' or 'gpt-3.5-turbo'
+            messages: [
+                {
+                    role: "system",
+                    content: "You are an expert interview evaluator.",
+                },
+                { role: "user", content: prompt },
+            ],
+            temperature: 0.2,
+            max_tokens: 500,
+        });
+
+        const text = completion.choices[0].message.content.trim();
+
+        // 🔹 Parse JSON safely
+        let parsed;
+        try {
+            parsed = JSON.parse(text);
+        } catch {
+            const match = text.match(/\{[\s\S]*\}/);
+            if (match) {
+                parsed = JSON.parse(match[0]);
+            } else {
+                return res
+                    .status(500)
+                    .json({ message: "Invalid AI response format", raw: text });
+            }
+        }
+
+        // 🔹 Ensure total score is valid
+        const metrics = [
+            "Communication",
+            "SubjectMatterExpertise",
+            "Confidence",
+            "BodyLanguage",
+            "Presentation",
+            "Voice",
+            "Tone",
+            "Pitch",
+            "AnswerSatisfaction",
+        ];
+
+        if (!parsed.TotalScore) {
+            const values = metrics.map((k) => Number(parsed[k]) || 0);
+            const avg = values.reduce((a, b) => a + b, 0) / metrics.length;
+            parsed.TotalScore = Math.round(avg * 100) / 100;
+        }
+
+        return res.json({ evaluation: parsed });
+    } catch (err) {
+        console.error("❌ Evaluation error:", err);
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+});
+*/
+//this code for the api integration if you got it
