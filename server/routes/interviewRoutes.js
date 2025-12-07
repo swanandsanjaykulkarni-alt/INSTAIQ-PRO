@@ -3,6 +3,8 @@ const router = express.Router();
 const InterviewHistory = require("../models/InterviewHistory");
 const PDFDocument = require("pdfkit");
 
+const evaluateAnswer = require("../utils/chatgptEvaluation");
+
 /* -------------------------- 🔹 Start Interview ----------------------------- */
 router.post("/start", async (req, res) => {
   try {
@@ -38,7 +40,6 @@ router.post("/start", async (req, res) => {
 /* -------------------------- 🔹 MOCK Evaluate Answer ----------------------------- */
 
 // This mock endpoint lets you test full flow (no ChatGPT API needed)
-
 router.post("/evaluate", async (req, res) => {
   try {
     const { question, userAnswer } = req.body;
@@ -47,25 +48,14 @@ router.post("/evaluate", async (req, res) => {
       return res.status(400).json({ message: "Question & answer required." });
     }
 
-    const mockEvaluation = {
-      Communication: 8,
-      SubjectMatterExpertise: 7,
-      Confidence: 8,
-      BodyLanguage: 7,
-      Presentation: 8,
-      Voice: 7,
-      Tone: 8,
-      Pitch: 7,
-      AnswerSatisfaction: 8,
-      TotalScore: 7.7,
-      Feedback: "Good explanation."
-    };
+    // Call ChatGPT evaluation
+    const evaluation = await evaluateAnswer(question, userAnswer);
 
-    return res.json({ evaluation: mockEvaluation });
+    return res.json({ evaluation });
 
   } catch (err) {
     console.error("EVALUATE ERROR:", err);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error during evaluation", error: err.message });
   }
 });
 

@@ -12,6 +12,14 @@ const INTERVIEW_API_URL = `${API_BASE_URL}/api/interview`;
 
 // --- HELPER FUNCTION ---
 // Converts string (e.g., "Software Engineering") to URL slug (e.g., "software-engineering")
+
+const enterFullscreen = () => {
+  const elem = document.documentElement;
+
+  if (elem.requestFullscreen) elem.requestFullscreen();
+  else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+  else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+};
 const toKebabCase = (str) => {
     if (!str) return "";
     return str
@@ -177,6 +185,7 @@ const ChatInterview = () => {
 
     // 🚀 Start Interview (Runs when the button is clicked)
     const startInterview = () => {
+          enterFullscreen(); 
         if (questions.length === 0) return alert("Cannot start, no questions loaded.");
 
         setIsInterviewActive(true);
@@ -192,37 +201,61 @@ const ChatInterview = () => {
         setCurrentQuestionIndex(1); // Set index to the next slot (Q2)
     };
 
-    // 📝 Submit Answer
-    const submitAnswer = () => {
-        const userAnswer = answerInput.trim();
-        if (!userAnswer) return alert("Please type your answer before proceeding.");
+   // 📝 Submit Answer
+const submitAnswer = async () => {
+    const userAnswer = answerInput.trim();
+    if (!userAnswer) return alert("Please type your answer before proceeding.");
 
-        const answeredQIndex = currentQuestionIndex - 1; 
-        if (answeredQIndex < 0 || answeredQIndex >= questions.length) return;
+    const answeredQIndex = currentQuestionIndex - 1;
+    if (answeredQIndex < 0 || answeredQIndex >= questions.length) return;
 
-        const q = questions[answeredQIndex];
-        appendChatMessage("user", userAnswer);
+    const q = questions[answeredQIndex];
+    appendChatMessage("user", userAnswer);
 
-        // Save answer to ref
-        sessionAnswersRef.current.push({
-            question: q.question,
-            userAnswer: userAnswer,
+    // Call evaluation API
+    try {
+        appendChatMessage("ai", "Evaluating your answer...");
+        const evalRes = await fetch(`${INTERVIEW_API_URL}/evaluate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: q.question, userAnswer }),
         });
 
-        // Check if there's a next question
-        if (currentQuestionIndex < questions.length) {
-            const nextQuestion = questions[currentQuestionIndex];
-            appendChatMessage("ai", `Q${currentQuestionIndex + 1}: ${nextQuestion.question}`);
-            setCurrentQuestionIndex(prev => prev + 1);
-            setAnswerInput('');
-        } else {
-            // End of questions
-            appendChatMessage("ai", "✅ Interview complete! Click End Interview to save results.");
-            clearInterval(timerRef.current);
-            setAnswerInput('');
-            // Optional: Auto-end interview here or let user click button
-        }
-    };
+        if (!evalRes.ok) throw new Error(`Evaluation failed: ${evalRes.status}`);
+        const data = await evalRes.json();
+
+        appendChatMessage("ai", data.evaluation.Feedback, "feedback");
+
+        // Save evaluated answer
+        sessionAnswersRef.current.push({
+            question: q.question,
+            userAnswer,
+            evaluation: data.evaluation
+        });
+
+    } catch (err) {
+        console.error("Evaluation error:", err);
+        sessionAnswersRef.current.push({
+            question: q.question,
+            userAnswer,
+            evaluation: null
+        });
+        appendChatMessage("ai", "⚠️ Evaluation failed for this answer.", "feedback");
+    }
+
+    // Move to next question
+    if (currentQuestionIndex < questions.length) {
+        const nextQuestion = questions[currentQuestionIndex];
+        appendChatMessage("ai", `Q${currentQuestionIndex + 1}: ${nextQuestion.question}`);
+        setCurrentQuestionIndex(prev => prev + 1);
+        setAnswerInput('');
+    } else {
+        appendChatMessage("ai", "✅ Interview complete! Click End Interview to save results.");
+        clearInterval(timerRef.current);
+        setAnswerInput('');
+    }
+};
+
 
     // ⏭️ Skip Question
     const skipQuestion = () => {
@@ -310,6 +343,40 @@ const ChatInterview = () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
     }, [interviewId, currentUserId, navigate, fetchQuestions]);
+
+    useEffect(() => {
+  const handleFullscreenExit = () => {
+    if (!document.fullscreenElement) {
+      localStorage.setItem("cheated", "true");
+      navigate("/cheated", { replace: true });
+    }
+  };
+
+  document.addEventListener("fullscreenchange", handleFullscreenExit);
+
+  return () => {
+    document.removeEventListener("fullscreenchange", handleFullscreenExit);
+  };
+}, [navigate]);
+
+useEffect(() => {
+  const handleKeyControl = (e) => {
+    if (
+      e.key === "Escape" ||
+      e.key === "F11" ||
+      (e.altKey && e.key === "Tab")
+    ) {
+      e.preventDefault();
+      localStorage.setItem("cheated", "true");
+      navigate("/cheated");
+    }
+  };
+
+  window.addEventListener("keydown", handleKeyControl);
+
+  return () => window.removeEventListener("keydown", handleKeyControl);
+}, [navigate]);
+
 
     // Timer format conversion
     const min = Math.floor(interviewTimeLeft / 60);

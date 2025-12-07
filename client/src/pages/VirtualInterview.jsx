@@ -278,7 +278,20 @@ setIsSpeaking(false);
 
 
     // 🚀 Start Interview Session (UNCHANGED)
+    // 🔒 Force Fullscreen
+const enterFullscreen = () => {
+  const elem = document.documentElement;
+
+  if (elem.requestFullscreen) elem.requestFullscreen();
+  else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen(); // Firefox
+  else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen(); // Chrome, Safari
+  else if (elem.msRequestFullscreen) elem.msRequestFullscreen(); // IE / Edge
+};
+
+
     const startInterviewSession = () => {
+      enterFullscreen();
+
         if (questions.length === 0) return alert("Cannot start, no questions loaded.");
 
         // Initialize session state
@@ -424,19 +437,37 @@ const toggleSpeaking = () => {
 }, [currentQuestionNumber]);
 
 // --- Detect Tab Change and Redirect to Cheated Page ---
+// 🚨 Detect Fullscreen Exit
 useEffect(() => {
-  const handleVisibilityChange = () => {
-    if (document.hidden) {
+  const handleFullscreenChange = () => {
+    if (!document.fullscreenElement) {
       navigate("/cheated");
     }
   };
 
-  document.addEventListener("visibilitychange", handleVisibilityChange);
+  document.addEventListener("fullscreenchange", handleFullscreenChange);
 
   return () => {
-    document.removeEventListener("visibilitychange", handleVisibilityChange);
+    document.removeEventListener("fullscreenchange", handleFullscreenChange);
   };
 }, [navigate]);
+
+// 🚫 Block Esc, F11, Alt+Tab effect partially
+useEffect(() => {
+  const blockKeys = (e) => {
+    if (e.key === "Escape" || e.key === "F11") {
+      e.preventDefault();
+      navigate("/cheated");
+    }
+  };
+
+  window.addEventListener("keydown", blockKeys);
+
+  return () => {
+    window.removeEventListener("keydown", blockKeys);
+  };
+}, [navigate]);
+
 
 
 

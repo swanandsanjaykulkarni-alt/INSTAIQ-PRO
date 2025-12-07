@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/node": "^22.13.11",
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
@@ -20,7 +21,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.1",
     "nodemailer": "^7.0.10",
-    "openai": "^6.2.0",
+    "openai": "^6.10.0",
     "pdfkit": "^0.17.2"
   }
 }

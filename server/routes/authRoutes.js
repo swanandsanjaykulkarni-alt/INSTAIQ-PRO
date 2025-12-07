@@ -1,8 +1,7 @@
-// server/routes/authRoutes.js
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
-const { OAuth2Client } = require("google-auth-library"); // ✅ Fixed import (CommonJS)
+const { OAuth2Client } = require("google-auth-library");
 const User = require("../models/User");
 
 const router = express.Router();
@@ -31,10 +30,14 @@ router.post("/signup", async (req, res) => {
     if (existingUser)
       return res.status(400).json({ message: "Email already registered" });
 
+    // Model will hash password automatically
     const newUser = new User({ name, email, password });
     await newUser.save();
 
-    res.status(201).json({ message: "User registered successfully!", user: { _id: newUser._id, email } });
+    res.status(201).json({
+      message: "User registered successfully!",
+      user: { _id: newUser._id, email },
+    });
   } catch (err) {
     console.error("Signup Error:", err);
     res.status(500).json({ message: "Server error during signup" });
@@ -48,14 +51,23 @@ router.post("/login", async (req, res) => {
     const password = (req.body.password || "").trim();
 
     const user = await User.findOne({ email });
-    if (!user || user.password !== password)
-      return res.status(400).json({ message: "Invalid credentials" });
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET || "devsecret", {
-      expiresIn: "1d",
+    // Use model method to compare hashed password
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET || "devsecret",
+      { expiresIn: "1d" }
+    );
+
+    res.json({
+      message: "Login successful",
+      token,
+      user: { _id: user._id, name: user.name, email: user.email },
     });
-
-    res.json({ message: "Login successful", token, user: { _id: user._id, name: user.name, email: user.email } });
   } catch (err) {
     console.error("Login Error:", err);
     res.status(500).json({ message: "Server error during login" });
@@ -94,9 +106,11 @@ router.post("/reset-password", async (req, res) => {
     const { email, otp, newPassword } = req.body;
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ message: "User not found" });
+
     if (user.resetOTP !== otp || Date.now() > user.resetOTPExpires)
       return res.status(400).json({ message: "Invalid or expired OTP" });
 
+    // Model will hash password automatically
     user.password = newPassword;
     user.resetOTP = null;
     user.resetOTPExpires = null;
@@ -118,9 +132,9 @@ router.post("/google-login", async (req, res) => {
     if (!email) return res.status(400).json({ message: "Email is required" });
 
     let user = await User.findOne({ email });
-
     if (!user) {
-      user = new User({ name, email, password: "google_oauth_user" });
+      // Generate random password for Google users; will be hashed automatically
+      user = new User({ name, email, password: Math.random().toString(36).slice(-8) });
       await user.save();
     }
 
@@ -133,7 +147,7 @@ router.post("/google-login", async (req, res) => {
     res.status(200).json({
       message: "Google user logged in successfully",
       user: { _id: user._id, name: user.name, email: user.email },
-      token, // ✅ send token here
+      token,
     });
   } catch (error) {
     console.error("Google Login Error:", error);
