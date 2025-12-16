@@ -22,23 +22,27 @@ async function evaluateAnswer(question, userAnswer) {
 
   
   const prompt = `
-You are a strict professional technical interviewer.
+You are a strict, unbiased professional interviewer evaluating a CHAT-BASED interview answer.
 
-Evaluate the answer NUMERICALLY.
-Do not use neutral scoring.
-Do not assign the same score to all categories.
-Do not default to 5.
+Evaluate the candidate ONLY based on the WRITTEN ANSWER quality.
+There is NO camera and NO voice input.
 
-Use this rule:
-- Weak or incorrect answer → 0–3
-- Partially correct → 4–6
-- Good explanation → 7–8
-- Expert-level → 9–10
+Scoring rules (must follow strictly):
+- Very weak / incorrect / meaningless → 0–2
+- Basic understanding, shallow → 3–4
+- Partially correct, lacks depth → 5–6
+- Clear, correct, well explained → 7–8
+- Excellent, detailed, professional → 9–10
 
-Consider the actual ANSWER quality.
-If the answer is short, incorrect, shallow, unclear, copied-like, or meaningless → give LOW scores.
+IMPORTANT RULES (MANDATORY):
+- Never assign the same score to all attributes.
+- Never default to 5.
+- Never use "NA", "N/A", null, or text for numeric fields.
+- All numeric values MUST be numbers between 0 and 10.
+- Scores must reflect the ACTUAL quality of the answer.
+- Short, vague, copied-like, or off-topic answers MUST receive low scores.
 
-Return ONLY valid JSON in exactly this format:
+Return ONLY valid JSON in exactly this structure:
 
 {
   "Communication": number,
@@ -51,16 +55,24 @@ Return ONLY valid JSON in exactly this format:
   "Pitch": number,
   "AnswerSatisfaction": number,
   "TotalScore": number,
-  "Feedback": "short professional improvement advice"
+  "Feedback": "short, clear, professional improvement advice"
 }
 
-Question: ${question}
-Answer: ${userAnswer}
+Special instructions for CHAT interview:
+- BodyLanguage = 0
+- Voice = 0
+- Pitch = 0
 
-Important:
-TotalScore must be between 0–10 and reflect the overall performance.
-Never return equal scores across all attributes.
-Never return N/A, NA, or text for numeric fields.
+TotalScore:
+- Must be between 0 and 10
+- Must represent overall performance quality
+- Must NOT be a sum of individual scores
+
+Question:
+${question}
+
+Answer:
+${userAnswer}
 `;
 
   try {
