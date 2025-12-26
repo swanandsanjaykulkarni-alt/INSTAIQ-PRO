@@ -184,7 +184,9 @@ router.get("/history/:userId", async (req, res) => {
 /* -------------------------- 🔹 Download Detailed PDF Report ------------------------ */
 router.get("/download/:id", async (req, res) => {
   try {
-    const interview = await InterviewHistory.findById(req.params.id).populate("userId", "name email");
+    const interview = await InterviewHistory
+      .findById(req.params.id)
+      .populate("userId", "name email");
 
     if (!interview) {
       return res.status(404).json({ message: "Interview not found." });
@@ -192,27 +194,55 @@ router.get("/download/:id", async (req, res) => {
 
     const doc = new PDFDocument({ margin: 50 });
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename=interview-${interview._id}.pdf`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=INSTA_IQ_Interview_Report_${interview._id}.pdf`
+    );
     doc.pipe(res);
 
-    // === HEADER SECTION ===
-    doc.fontSize(18).text("INSTA IQ - Detailed Interview Report", { align: "center" });
-    doc.moveDown(1);
-    doc.fontSize(12)
-      .text(`Candidate: ${interview.userId?.name || "Unknown"}`)
-      .text(`Email: ${interview.userId?.email || "Unknown"}`)
-      .text(`Category: ${interview.category}`)
-      .text(`Branch: ${interview.branch || "N/A"}`)
-      .text(`Mode: ${interview.mode}`)
-      .text(`Date: ${interview.date.toLocaleString()}`)
-      .moveDown(0.5)
+    /* ===================== HEADER ===================== */
+    doc
       .font("Helvetica-Bold")
-      .text(`Overall Score: ${interview.totalAverage}/10`, { underline: true })
-      .moveDown();
+      .fontSize(22)
+      .text("INSTA IQ", { align: "center" });
 
-    // === PERFORMANCE INDICATORS AVERAGE ===
-    doc.font("Helvetica-Bold").fontSize(14).text("Performance Indicators", { underline: true });
+    doc
+      .fontSize(14)
+      .font("Helvetica")
+      .text("AI-Powered Interview Evaluation Report", { align: "center" });
+
     doc.moveDown(0.5);
+    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc.moveDown(1.5);
+
+    /* ===================== CANDIDATE SUMMARY ===================== */
+    doc.font("Helvetica-Bold").fontSize(14).text("Candidate Summary");
+    doc.moveDown(0.5);
+
+    doc.font("Helvetica").fontSize(11);
+    doc.text(`Name       : ${interview.userId?.name || "Unknown"}`);
+    doc.text(`Email      : ${interview.userId?.email || "Unknown"}`);
+    doc.text(`Category   : ${interview.category}`);
+    doc.text(`Branch     : ${interview.branch || "N/A"}`);
+    doc.text(`Mode       : ${interview.mode}`);
+    doc.text(`Date       : ${new Date(interview.date).toLocaleString()}`);
+
+    doc.moveDown(1);
+
+    /* ===================== OVERALL SCORE ===================== */
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(16)
+      .fillColor("#1f4fd8")
+      .text(`Overall Average Score: ${interview.totalAverage}/10`);
+
+    doc.fillColor("black");
+    doc.moveDown(1.5);
+
+    /* ===================== PERFORMANCE INDICATORS ===================== */
+    doc.font("Helvetica-Bold").fontSize(14).text("Performance Indicators");
+    doc.moveDown(0.5);
+
     const metrics = [
       "ConceptualClarity",
       "ProblemDecompositionAbility",
@@ -222,15 +252,13 @@ router.get("/download/:id", async (req, res) => {
       "CommunicationOfTechnicalIdeas",
       "LearningAgility",
       "EngineeringJudgmentDecisionMaking",
-      
     ];
 
-    // calculate averages
     const averages = {};
     metrics.forEach(m => {
       let sum = 0, count = 0;
       interview.answers.forEach(a => {
-        if (a.evaluation && a.evaluation[m] != null) {
+        if (a.evaluation && typeof a.evaluation[m] === "number") {
           sum += a.evaluation[m];
           count++;
         }
@@ -239,44 +267,90 @@ router.get("/download/:id", async (req, res) => {
     });
 
     metrics.forEach(m => {
-      doc.font("Helvetica").fontSize(11)
-        .text(`${m}: ${averages[m]}`, { indent: 20 });
+      doc
+        .font("Helvetica")
+        .fontSize(11)
+        .text(
+          `${m.replace(/([A-Z])/g, " $1").trim()}: ${averages[m]}`,
+          { indent: 20 }
+        );
     });
 
-    doc.moveDown(1);
+    doc.moveDown(1.5);
 
-    // === QUESTION-WISE FEEDBACK ===
-    doc.font("Helvetica-Bold").fontSize(14).text("Question-wise Feedback", { underline: true });
+    /* ===================== QUESTION-WISE FEEDBACK ===================== */
+    doc.font("Helvetica-Bold").fontSize(14).text("Question-wise Evaluation");
     doc.moveDown(0.5);
 
     interview.answers.forEach((a, i) => {
       const ev = a.evaluation || {};
 
-      doc.font("Helvetica-Bold").fontSize(12)
-        .text(`Q${i + 1}: ${a.question}`)
-        .font("Helvetica")
-        .text(`Answer: ${a.userAnswer}`)
-        .moveDown(0.3);
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(12)
+        .text(`Q${i + 1}. ${a.question}`);
 
-      // Display all indicators per question
+      doc.moveDown(0.3);
+
+      doc
+        .font("Helvetica")
+        .fontSize(11)
+        .text(`Answer:`, { underline: true });
+
+      doc
+        .fontSize(10)
+        .text(a.userAnswer || "N/A", { indent: 20 });
+
+      doc.moveDown(0.3);
+
       metrics.forEach(m => {
         if (ev[m] !== undefined) {
-          doc.fontSize(10).text(`${m}: ${ev[m]}/10`, { indent: 20 });
+          doc
+            .fontSize(10)
+            .text(
+              `${m.replace(/([A-Z])/g, " $1").trim()}: ${ev[m]}/10`,
+              { indent: 20 }
+            );
         }
       });
 
-      doc.moveDown(0.2)
+      doc.moveDown(0.3);
+
+      doc
+        .font("Helvetica-Bold")
         .fontSize(10)
-        .text(`Total Score: ${ev.TotalScore ?? "N/A"}`)
+        .text(`Total Score: ${ev.TotalScore ?? "N/A"}/10`, { indent: 20 });
+
+      doc
         .font("Helvetica-Oblique")
-        .text(`Feedback: ${ev.Feedback ?? "No feedback provided."}`)
-        .moveDown(1);
+        .fontSize(10)
+        .text(`Feedback: ${ev.Feedback ?? "No feedback provided."}`, {
+          indent: 20,
+        });
+
+      doc.moveDown(1);
     });
+
+    /* ===================== FOOTER ===================== */
+    doc.moveDown(1);
+    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    doc
+      .fontSize(9)
+      .font("Helvetica-Oblique")
+      .text(
+        "This report is generated by INSTA IQ AI Interview Platform.",
+        { align: "center" }
+      );
 
     doc.end();
   } catch (err) {
     console.error("❌ PDF generation error:", err);
-    res.status(500).json({ message: "Server error generating PDF", error: err.message });
+    res.status(500).json({
+      message: "Server error generating PDF",
+      error: err.message,
+    });
   }
 });
 
