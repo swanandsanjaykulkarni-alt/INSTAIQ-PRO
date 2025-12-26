@@ -214,15 +214,15 @@ router.get("/download/:id", async (req, res) => {
     doc.font("Helvetica-Bold").fontSize(14).text("Performance Indicators", { underline: true });
     doc.moveDown(0.5);
     const metrics = [
-      "Communication",
-      "SubjectMatterExpertise",
-      "Confidence",
-      "BodyLanguage",
-      "Presentation",
-      "Voice",
-      "Tone",
-      "Pitch",
-      "AnswerSatisfaction",
+      "ConceptualClarity",
+      "ProblemDecompositionAbility",
+      "ApplicationOfKnowledge",
+      "LogicalAlgorithmicThinking",
+      "DebuggingErrorHandlingMindset",
+      "CommunicationOfTechnicalIdeas",
+      "LearningAgility",
+      "EngineeringJudgmentDecisionMaking",
+      
     ];
 
     // calculate averages

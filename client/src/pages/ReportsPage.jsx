@@ -14,7 +14,7 @@ const INDICATORS_LIST = [
     "CommunicationOfTechnicalIdeas",
     "LearningAgility",
     "EngineeringJudgmentDecisionMaking",
-    "AnswerSatisfaction",
+   
 ];
 
 // --- Helper Functions ---
