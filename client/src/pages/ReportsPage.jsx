@@ -113,7 +113,7 @@ const ReportsPage = () => {
 
 
     calculatedIndicators[indicator] =
-        count > 0 ? (total / count).toFixed(1) : "0.0";
+    count > 0 ? (total / count).toFixed(1) : "N/A";
 });
 
 
