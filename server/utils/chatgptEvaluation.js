@@ -6,7 +6,7 @@ const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// ✅ Helper: Convert safely to number (0–10)
+// ✅ Helper: safely force number between 0–10
 function safeScore(value) {
   const num = Number(value);
   if (isNaN(num)) return 0;
@@ -20,53 +20,57 @@ async function evaluateAnswer(question, userAnswer) {
     throw new Error("Question and userAnswer are required.");
   }
 
-  
   const prompt = `
-You are a strict, unbiased professional interviewer evaluating a CHAT-BASED interview answer.
+You are a strict, unbiased professional technical interviewer evaluating a CHAT-BASED interview answer.
 
 Evaluate the candidate ONLY based on the WRITTEN ANSWER quality.
-There is NO camera and NO voice input.
+There is NO camera, NO voice, and NO body language.
 
-Scoring rules (must follow strictly):
+Use the following INDICATORS and evaluate them independently:
+
+1. ConceptualClarity – Understanding of core concepts and fundamentals
+2. ProblemDecompositionAbility – Ability to break the problem into logical parts
+3. ApplicationOfKnowledge – Applying theory to practical or real-world context
+4. LogicalAlgorithmicThinking – Structured, logical, step-by-step reasoning
+5. DebuggingErrorHandlingMindset – Awareness of edge cases, errors, validations
+6. CommunicationOfTechnicalIdeas – Clear explanation using correct technical terms
+7. LearningAgility – Willingness to adapt, improve, or learn better approaches
+8. EngineeringJudgmentDecisionMaking – Choosing appropriate, efficient solutions
+
+SCORING RULES (STRICT):
 - Very weak / incorrect / meaningless → 0–2
 - Basic understanding, shallow → 3–4
 - Partially correct, lacks depth → 5–6
 - Clear, correct, well explained → 7–8
 - Excellent, detailed, professional → 9–10
 
-IMPORTANT RULES (MANDATORY):
-- Never assign the same score to all attributes.
-- Never default to 5.
-- Never use "NA", "N/A", null, or text for numeric fields.
-- All numeric values MUST be numbers between 0 and 10.
-- Scores must reflect the ACTUAL quality of the answer.
-- Short, vague, copied-like, or off-topic answers MUST receive low scores.
+MANDATORY RULES:
+- Never assign the same score to all indicators
+- Never default to 5
+- Never use NA, N/A, null, or text for numeric fields
+- Scores MUST reflect the ACTUAL quality of the answer
+- Short, vague, copied-like, or off-topic answers MUST receive low scores
 
-Return ONLY valid JSON in exactly this structure:
+Return ONLY valid JSON in EXACTLY this format:
 
 {
-  "Communication": number,
-  "SubjectMatterExpertise": number,
-  "Confidence": number,
-  "BodyLanguage": number,
-  "Presentation": number,
-  "Voice": number,
-  "Tone": number,
-  "Pitch": number,
-  "AnswerSatisfaction": number,
+  "ConceptualClarity": number,
+  "ProblemDecompositionAbility": number,
+  "ApplicationOfKnowledge": number,
+  "LogicalAlgorithmicThinking": number,
+  "DebuggingErrorHandlingMindset": number,
+  "CommunicationOfTechnicalIdeas": number,
+  "LearningAgility": number,
+  "EngineeringJudgmentDecisionMaking": number,
   "TotalScore": number,
   "Feedback": "short, clear, professional improvement advice"
 }
 
-Special instructions for CHAT interview:
-- BodyLanguage = 0
-- Voice = 0
-- Pitch = 0
-
-TotalScore:
+TotalScore rules:
 - Must be between 0 and 10
-- Must represent overall performance quality
-- Must NOT be a sum of individual scores
+- Must represent OVERALL performance
+- Must NOT be a sum or average
+- Judge like a real interviewer
 
 Question:
 ${question}
@@ -82,47 +86,45 @@ ${userAnswer}
       temperature: 0,
     });
 
-    let result = response.choices[0].message.content.trim();
+    const raw = response.choices[0].message.content.trim();
     let parsed;
 
     try {
-      parsed = JSON.parse(result);
+      parsed = JSON.parse(raw);
     } catch (err) {
-      console.error("Invalid JSON from GPT:", result);
+      console.error("❌ Invalid JSON from ChatGPT:", raw);
       throw new Error("Invalid JSON from ChatGPT");
     }
 
-    // ✅ Sanitize fields before DB save
+    // ✅ Sanitize & normalize before DB save
     return {
-      Communication: safeScore(parsed.Communication),
-      SubjectMatterExpertise: safeScore(parsed.SubjectMatterExpertise),
-      Confidence: safeScore(parsed.Confidence),
-      BodyLanguage: safeScore(parsed.BodyLanguage),
-      Presentation: safeScore(parsed.Presentation),
-      Voice: safeScore(parsed.Voice),
-      Tone: safeScore(parsed.Tone),
-      Pitch: safeScore(parsed.Pitch),
-      AnswerSatisfaction: safeScore(parsed.AnswerSatisfaction),
-      TotalScore: safeScore(parsed.TotalScore),   // ✅ force 0–10
-      Feedback: parsed.Feedback || "No feedback generated."
+      ConceptualClarity: safeScore(parsed.ConceptualClarity),
+      ProblemDecompositionAbility: safeScore(parsed.ProblemDecompositionAbility),
+      ApplicationOfKnowledge: safeScore(parsed.ApplicationOfKnowledge),
+      LogicalAlgorithmicThinking: safeScore(parsed.LogicalAlgorithmicThinking),
+      DebuggingErrorHandlingMindset: safeScore(parsed.DebuggingErrorHandlingMindset),
+      CommunicationOfTechnicalIdeas: safeScore(parsed.CommunicationOfTechnicalIdeas),
+      LearningAgility: safeScore(parsed.LearningAgility),
+      EngineeringJudgmentDecisionMaking: safeScore(parsed.EngineeringJudgmentDecisionMaking),
+      TotalScore: safeScore(parsed.TotalScore),
+      Feedback: parsed.Feedback || "No feedback generated.",
     };
 
   } catch (err) {
-    console.error("ChatGPT evaluation error:", err);
+    console.error("🔥 ChatGPT evaluation error:", err);
 
-    // ✅ Safe fallback
+    // ✅ Safe fallback (never breaks DB)
     return {
-      Communication: 0,
-      SubjectMatterExpertise: 0,
-      Confidence: 0,
-      BodyLanguage: 0,
-      Presentation: 0,
-      Voice: 0,
-      Tone: 0,
-      Pitch: 0,
-      AnswerSatisfaction: 0,
+      ConceptualClarity: 0,
+      ProblemDecompositionAbility: 0,
+      ApplicationOfKnowledge: 0,
+      LogicalAlgorithmicThinking: 0,
+      DebuggingErrorHandlingMindset: 0,
+      CommunicationOfTechnicalIdeas: 0,
+      LearningAgility: 0,
+      EngineeringJudgmentDecisionMaking: 0,
       TotalScore: 0,
-      Feedback: "Evaluation failed."
+      Feedback: "Evaluation failed.",
     };
   }
 }
