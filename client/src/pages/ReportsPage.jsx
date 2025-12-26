@@ -98,17 +98,25 @@ const ReportsPage = () => {
 
             // Calculate indicator averages
             const calculatedIndicators = {};
-            INDICATORS_LIST.forEach((indicator) => {
-                let total = 0;
-                let count = 0;
-                latestInterview.answers.forEach((ans) => {
-                    if (ans.evaluation && typeof ans.evaluation[indicator] === "number") {
-                        total += ans.evaluation[indicator];
-                        count++;
-                    }
-                });
-                calculatedIndicators[indicator] = count > 0 ? (total / count).toFixed(1) : "N/A";
-            });
+           INDICATORS_LIST.forEach((indicator) => {
+    let total = 0;
+    let count = 0;
+
+    latestInterview.answers.forEach((ans) => {
+    const value = ans.evaluation?.[indicator];
+
+    if (typeof value === "number") {
+        total += value;
+        count++;
+    }
+});
+
+
+    calculatedIndicators[indicator] =
+        count > 0 ? (total / count).toFixed(1) : "0.0";
+});
+
+
             setAvgIndicatorScores(calculatedIndicators);
 
         } catch (err) {
@@ -234,10 +242,11 @@ const ReportsPage = () => {
                     <div id="indicatorsContainer" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                         {INDICATORS_LIST.map(indicator => (
                             <IndicatorScoreCard 
-                                key={indicator}
-                                indicator={indicator} 
-                                score={avgIndicatorScores[indicator] || "N/A"}
-                            />
+    key={indicator}
+    indicator={indicator} 
+    score={avgIndicatorScores[indicator] ?? "0.0"}
+/>
+
                         ))}
                     </div>
                 </section>
