@@ -6,14 +6,14 @@ import ProtectedRoute from '../components/ProtectedRoute'; // Ensure this is imp
 // --- CONFIGURATION ---
 const API_BASE_URL = "http://localhost:3000";
 const INDICATORS_LIST = [
-    "Communication",
-    "SubjectMatterExpertise",
-    "Confidence",
-    "BodyLanguage",
-    "Presentation",
-    "Voice",
-    "Tone",
-    "Pitch",
+    "ConceptualClarity",
+    "ProblemDecompositionAbility",
+    "ApplicationOfKnowledge",
+    "LogicalAlgorithmicThinking",
+    "DebuggingErrorHandlingMindset",
+    "CommunicationOfTechnicalIdeas",
+    "LearningAgility",
+    "EngineeringJudgmentDecisionMaking",
     "AnswerSatisfaction",
 ];
 
