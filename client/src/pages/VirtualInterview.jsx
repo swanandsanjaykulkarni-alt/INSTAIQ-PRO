@@ -32,6 +32,8 @@ const VirtualInterview = () => {
     const [feedback, setFeedback] = useState({ score: null, message: '' });
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [questionTimeLeft, setQuestionTimeLeft] = useState(0); 
+    const [isEvaluating, setIsEvaluating] = useState(false);
+
 
     // --- Refs for mutable DOM elements and internal state ---
     const timerRef = useRef(); // Overall interview timer
@@ -84,6 +86,7 @@ setIsSpeaking(false);
         // 2. Disable controls while processing
         setIsInterviewActive(false); 
         setFeedback(prev => ({ ...prev, message: isAutoSubmit ? "Time's up! Generating analysis..." : "Submitting answer and generating analysis..." }));
+        setIsEvaluating(true);
 
         // 3. API call to submit answer and get evaluation
         try {
@@ -109,11 +112,16 @@ setIsSpeaking(false);
 
             // 6. ADVANCE the question number
             setCurrentQuestionNumber(prev => prev + 1);
-            
+            setIsEvaluating(false);
+
         } catch (error) {
-            setFeedback(prev => ({ ...prev, message: `Submission Error: ${error.message}. Please try again.` }));
-            setIsInterviewActive(true); // Re-enable controls on error
-        }
+    setIsEvaluating(false);
+    setIsInterviewActive(true);
+    setFeedback(prev => ({
+        ...prev,
+        message: `Submission Error: ${error.message}. Please try again.`
+    }));
+}
     }, [currentQuestionNumber, answerInput, questions, interviewId]); // Dependencies added
 
     // 🕒 Question Timer Logic (Must be defined after submitAnswer)
@@ -548,20 +556,30 @@ useEffect(() => {
 
                 {/* Start Button (Centered) */}
                 <main className="flex-grow flex flex-col items-center justify-center">
-                    {!isInterviewActive && !isStartDisabled && questions.length > 0 && (
-                        <Tippy content="Begin your virtual interview session" placement="top">
-  <button 
-    id="startInterviewBtn" 
-    onClick={startInterviewSession}
-    className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xl font-bold rounded-full shadow-xl transition duration-300 disabled:bg-gray-500" 
-    disabled={isStartDisabled}
-  >
-    Start Interview
-  </button>
-</Tippy>
 
-                    )}
-                </main>
+  {!isInterviewActive && !isEvaluating && currentQuestionNumber === 0 && (
+    <Tippy content="Begin your virtual interview session" placement="top">
+      <button 
+        id="startInterviewBtn" 
+        onClick={startInterviewSession}
+        className="px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white text-xl font-bold rounded-full shadow-xl transition duration-300"
+      >
+        Start Interview
+      </button>
+    </Tippy>
+  )}
+
+  {isEvaluating && (
+    <div className="flex flex-col items-center justify-center space-y-4">
+      <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+      <p className="text-indigo-200 text-lg font-semibold">
+        AI is evaluating your answer...
+      </p>
+    </div>
+  )}
+
+</main>
+
 
                 {/* Footer Controls */}
                <footer
